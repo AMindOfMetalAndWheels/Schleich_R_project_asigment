@@ -1,0 +1,57 @@
+Assignment 1:
+
+Objective: The focus of this assignment is on collaboration and reproducible research. You will need to create a GitHub repository, import it into an RStudio project, manage version control using the renv package, install and use the tidyverse and additional packages you might need, perform data manipulation on the famous Iris dataset or dataset of you choosing, create visualizations using ggplot, commit and push the changes to the GitHub repository. Remember, your group members should be able to clone your repository and recreate the exact isolated environment and used packages by running renv::restore(). Don’t forget to use run.snapshot(), commit and push.
+
+Instructions:
+
+1. Setting up the GitHub Repository:
+
+Create a new repository on GitHub. Give it a meaningful name (e.g., "IrisAnalysis").
+Provide a short description of your project.
+Initialize the repository with a README file.
+Make the repository public so that it can be easily shared.
+Add a .gitignore for R to the repository settings.
+Choose the MIT License for your repository.
+2. Setting up the RStudio Project:
+
+Open RStudio and create a new RStudio Project.
+Choose "Version Control" > "Git" and paste the repository URL.
+Initialize the project, and RStudio will clone the repository.
+3. Installing and Initializing Packages:
+
+Install the tidyverse package by running packages("tidyverse").
+Load the tidyverse library in your R script with library(tidyverse).
+Install additional packages if needed.
+Use renv::snapshot() to save the state of your library.
+4. Loading and Exploring Data:
+
+Load the Iris dataset using data(iris).
+Explore the structure of the dataset using functions like head(), summary(), and str()
+5. Data Manipulation:
+
+Perform a data manipulation task, such as shown hereLinks to an external site. or hereLinks to an external site..
+6. Data Visualization with ggplot2:
+
+Use the ggplot2 or ggpubr package to create various plots using the Iris dataset.
+Customize the plot by adding labels, titles, and adjusting aesthetics.
+7. Committing Changes:
+
+Initialize a Git repository in your RStudio project.
+Commit your changes.
+8. Pushing to GitHub:
+
+Push your local changes to GitHub.
+9. Saving Library State:
+
+After installing and loading packages remember to use renv::snapshot() to save the library state.
+10. Ignoring Files:
+
+Modify the .gitignore file to include entries for files or directories that should not be pushed to GitHub.
+Typically, you'd want to ignore potentially large files and folders like, .Rproj, .RData, etc.
+ 
+
+Short video demonstrating the correct way to update a lock file using renv (recommend to watch on speed 2x).
+
+
+
+ 
