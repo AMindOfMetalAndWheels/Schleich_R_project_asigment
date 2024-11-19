@@ -19,6 +19,7 @@ editor_options:
 # In order to change general setup of the printed chunks we'll use 'knitr' package
 # NOTE - this rmarkdown will be converted to pdf document and saved to your working directory by using Knit button.
 library(knitr)
+tinytex::install_tinytex()
 opts_chunk$set(tidy.opts = list(width.cutoff = 65), tidy = TRUE)
 ```
 
