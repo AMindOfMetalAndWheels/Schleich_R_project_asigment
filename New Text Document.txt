@@ -1,0 +1,7 @@
+ok soooo is the threshold supposed to be run after calculating either the mean/binary or is that an additional window? mean is fine!
+Also the binary ended up looking like one big  line, also putting the fucntions into each other... --> look nicer, queal lenghts for one window only make one positive or negative (sleep epox), option?
+upd and down filtering good
+path as functions argument -->put their own path in
+column as agrument (euclidean column), have look at it!
+
+submit on (zip file) canvas --> feedback in comment section + git repo 

@@ -1,0 +1,33 @@
+---
+title: "Intermediate R - Data Science and Visualization Techniques Beyond Base R"
+subtitle: 'Exam II'
+author: "Alen Lovric"
+---
+
+
+This study is dedicated to the examination of maximal force generation in knee extensor and flexor muscles, emphasizing the critical parameters of speed, torque, and joint angle, employing an isokinetic dynamometer. In the following assignment you will analyse output data (angle, speed and torque) from isokinetic dynamometer of 1 participant, before (8 files) and after exercise (8 files). The goal is to calculate the global minima and maxima of torque variable based on the segments of the angle variable (see final_figure.pdf). The segments of the angle variable can be define using **peaks()** function form the **splus2R** package. There are 5 values (global minima) on the negative side of y-axis and 4 values (global maxima) on the positive side of y-axis you will need to find for the torque variable. There are total of 16 files (see folder structure bellow) you will need to read in and analyze, and as an final outcome of the assignment, you are to submit 16 plots consolidated into a single .pdf file together with the Rmarkdown file to Canvas.
+
+*IMPORTANT INFORMATION ABOUT THE DATA!*
+*FOLDER STRUCTURE:*
+
+Data 
+|-- BRACE_biodex_isokinetic_dynamometer_RAW_A_BID-4_20230415 
+|   |-- CTM01.txt 
+|   |-- CTM03.txt 
+|   |-- ... 
+|-- BRACE_biodex_isokinetic_dynamometer_RAW_A_R2_20230415 <br>
+|   |-- CTM02.txt 
+|   |-- CTM04.txt
+|   |-- ... 
+
+*FILE INFO:*
+Each file contains two segments [info] and [data].
+For the analysis you will be focusing only on the [data] segment of the files.
+However [info] segment will be important for the final plotting. For that part you will need to extract the speed information of each file.
+Files with pattern BID refer to data measurements before exercise and files with pattern R2 refer to measurements after exercise. This info is also important for the plotting part of the assignment.
+All measurements are performed twice for each speed (30, 90, 180 and 300) in the [info] segment.
+
+*NOTE:* One of the files contains random ',' as a numeric separator, which will force the entire column to be read as a character class. You will need to replace the ',' separator with '.' to properly convert the column to numeric.
+
+*INSTRUCTIONS:*
+YOU ARE ON YOUR OWN. GODD LUCK AND HAPPY CODING :)
