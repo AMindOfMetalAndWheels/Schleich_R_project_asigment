@@ -1,0 +1,221 @@
+---
+title: "Exam2_Schleich_Fabian"
+author: "Fabian Schleich"
+date: "2024-12-01"
+output: 
+ pdf_document: 
+  default
+fontsize: 5pt
+editor_options: 
+  chunk_output_type: console
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## R Markdown
+
+#requirments of the exam are: 
+Data: 
+done-read in data from line 26 on in 
+done-*NOTE:* One of the files contains random ',' as a numeric separator, which will force the entire column to be read as a character class. You will need to replace the ',' separator with '.' to properly convert the column to numeric.
+done-where is the time varaible??
+done -dont filter tourq data this way, some peaks have same value and are filtered out atm --> add super tiny bit of unique random data before filtering??? test on CTM15.txt, we accept that one out of 144 peaks are not captured
+done -calculate torque minima and maxima and plot them, use splus2R package(peaks() function) to identify them
+
+-Read in and asign usefull names (FIle: A_BID_CTM01; "folder name" "_" "filename before the .txt"); take "before"; or "after" from file name, Info in file: speed: x
+
+Plotting:
+done-x axis: time(min) with a bit of padding/starting before 0, then 2500, 5000, 7500 (plotting everything up to 10.000)
+done-plot speed, angle, torque as "names" underneath plot
+done -y axis: value -130 to 200, with xaxis lines at 100, 0 and -100
+
+
+-Plot angle, speed and torque for 16 data sets in 3 diffrent colors value vs time (min) --> facit wrap or for loop?
+-Plot header (file name but not the -txt), exercise: before and after (added to folder) and speed: x
+
+Finish:
+-knit them as pdf together
+-Name pdf "Exam2_Schleich_Fabian"
+
+
+
+#Load liberies/install
+```{r 1}
+#install.packages("tidyverse")
+#install.packages("splus2R")
+library(tidyverse)
+library(splus2R)
+library(tibble)
+
+```
+
+
+
+#load data and info
+```{r, data}
+#Step1
+#load path first
+dirty_path <- "C:/Users/fabisc/OneDrive - Karolinska Institutet/Documents/Courses/Intermediate R/Schleich_R_project_asigment/Day8and9_Exam2/data"
+#list all files 
+all_dirty_files <- list.files(path = dirty_path, recursive = T , pattern = ".txt", full.names = T)
+#?list.files
+
+
+all_dirty_files_names <- paste0(str_extract(all_dirty_files, "([A-Z]_)?R2|([A-Z]_)?BID"),'_', gsub('.txt', '', basename(all_dirty_files)))
+#?basename
+#?gsub
+#all_dirty_files_names
+
+#Step2 +3
+#col names to rename the columns
+cool_names <- c("Torque", "Speed", "Angle" )
+
+#make a list, then make it characters, then remove the ".", 
+#then revert to numeric and then add the names
+#then add the time column
+#used for peaks input
+all_cleaned_files_list <- all_dirty_files %>%
+  map(~ read.table(.x, skip = 26, header = FALSE)) %>%
+  map(~ .x %>% 
+        mutate_all(as.character) %>%                   #strings
+        mutate_all(~ str_replace_all(., ",", ".")) %>% #remove "."
+        mutate_all(as.numeric)                         #Convert back to numeric
+       )%>%
+  map(. %>% purrr::set_names(cool_names)) %>%          #names of column set
+  set_names(all_dirty_files_names) %>%                 #names of dataframes set
+  map(~ .x %>% mutate(time = 1:nrow(.x)) )         #time column lenght nrow
+
+#then use pivot to make longer, will be used for plotting
+all_cleaned_files_list_long <- all_cleaned_files_list %>%
+    map(~ .x %>% pivot_longer(cols = c(Torque, Speed, Angle), 
+               names_to = "variable", 
+               values_to = "value"))
+
+#map(all_cleaned_files_list, head) 
+#?map
+#?read.table
+#?set_names
+
+
+```
+
+#local min and maxima
+```{r, splus2R package(peaks() function)}
+#pulls torque values only
+#makes logical values from peak value for positive
+all_cleaned_files_list_torque_max <- all_cleaned_files_list %>%
+  map(~ .x %>% pull(Torque)) %>%
+  map(~ peaks(.x, span=280, strict=F, endbehavior = 1))
+  
+#make num values out of them, then filter for positive values and round them
+all_cleaned_files_list_torque_max_value <- map2(
+  all_cleaned_files_list,             # List of data frames
+  all_cleaned_files_list_torque_max,  # List of logical vectors
+  ~ .x %>% filter(.y == TRUE))        # Filter rows for TRUE
+#read in data and filter it
+all_cleaned_files_list_torque_max_value_filtered <- all_cleaned_files_list_torque_max_value %>%
+  map(~ .x %>% filter(Torque > 30)) %>%
+  map(~ .x %>% distinct(Torque, .keep_all = T)) %>%
+  map(~ .x %>% mutate(Torque = round(Torque, 2)))
+  
+
+#makes logical values from peak value for negative
+all_cleaned_files_list_torque_min <- all_cleaned_files_list %>%
+  map(~ .x %>% mutate(Torque = -Torque))
+#then use this dataframe as before
+all_cleaned_files_list_torque_min_a <- all_cleaned_files_list_torque_min %>%
+  map(~ .x %>% pull(Torque)) %>%
+  map(~ .x %>% peaks(span=400, strict=F, endbehavior = 1))
+
+#make num values out of them, then filter for positive values and round them
+all_cleaned_files_list_torque_min_value <- map2(
+  all_cleaned_files_list,             # List of data frames
+  all_cleaned_files_list_torque_min_a,  # List of logical vectors
+  ~ .x %>% filter(.y == TRUE))        # Filter rows for TRUE
+#read in data and filter it
+all_cleaned_files_list_torque_min_value_filtered <- all_cleaned_files_list_torque_min_value %>%
+  map(~ .x %>% filter(Torque < -50)) %>%          #filter low values out
+  map(~ .x %>% distinct(Torque, .keep_all = T)) %>%  #filter non-unique out
+  map(~ .x %>% mutate(Torque = round(Torque, 2)))   #round 
+
+```
+
+#additonal data 
+```{r, additonal data}
+# Extract the speed info
+speed <- all_dirty_files %>% 
+  map(read.table, nrows = 1, header = T, col.names = 'info') %>% # read in the files
+  map(. %>% tibble::rownames_to_column(var = 'id')) %>% # assign row names to column  
+  map(. %>% unite('note', id:info, sep = ': ', remove = T)) %>% # unite to columns into one 
+  set_names(all_dirty_files_names) # define the names for each df in a list
+# Print head of all dfs in the list
+#map(speed, head)
+
+# Create additional info - here you don't need to do anything. Rather try to understand how code works
+info <- data.frame(path = all_dirty_files,
+                   file_names = all_dirty_files_names) %>% 
+  mutate(condition = ifelse(grepl('BID',.$path), 'Exercise: Before', 'Exercise: After')) %>% 
+  select(file_names, condition)
+
+# print info
+#print(info)
+
+```
+
+
+
+
+#data is read in time to start plotting
+```{r, plot}
+#plot all 16 plots
+plots_all_clean_plots <- lapply(1:length(speed), function(i) {
+  
+  ggplot(data = all_cleaned_files_list_long[[i]], aes(time, value, color = variable)) + # define main ggplot 
+    geom_path() + # line is ugly so i used path
+    geom_point(data = all_cleaned_files_list_torque_max_value_filtered[[i]], 
+               aes(x = time, y = Torque), inherit.aes = FALSE) + #max
+    geom_point(data = all_cleaned_files_list_torque_min_value_filtered[[i]], 
+               aes(x = time, y = Torque), inherit.aes = FALSE) + #min
+    labs(col = '', y = 'Value', x = 'Time(min)',
+         title = paste('File:', names(speed)[i]),
+         subtitle = paste(info$condition[info$file_names == names(speed)[i]],'\n',
+                          str_to_title(speed[[i]]$note)))+
+    geom_text(data = all_cleaned_files_list_torque_max_value_filtered[[i]], 
+            aes(x = time, y = Torque, label = Torque), nudge_y  = 15, size = 3, inherit.aes = FALSE)+
+    geom_text(data = all_cleaned_files_list_torque_min_value_filtered[[i]], 
+             aes(x = time, y = Torque, label = Torque), nudge_y  = -15, size = 3, inherit.aes = FALSE)+
+      theme_bw()+
+    theme(
+     legend.title = element_blank(), 
+     panel.grid.major = element_line(),
+     panel.grid.minor = element_blank(),
+     legend.position = "bottom",
+  )
+})
+
+
+# print third figure
+plots_all_clean_plots
+
+```
+
+
+
+```{r}
+# Save the plots in the single .pdf file
+pdf(file = paste0(dirty_path, '/Schleich_Fabian-Alexander_Exam2_results_figs.pdf'))
+map(plots_all_clean_plots, function(plot) print(plot))
+dev.off()
+```
+*THE END :)*
+
+
+#And something to remember:
+What I think it really means is: I'm a teacher. I am a teacher. I teach all the time, as you do and as all of you do-whether we know it or not, whether we take responsibility for it or not. I hold nothing back because I want to see that light go off. I like to see the children say, 'I never thought of that before.' And I think, 'I've got them!'- Maya Angelou
+
+Thank you for making me think, "I never thought of that before." Alen.
+
+
