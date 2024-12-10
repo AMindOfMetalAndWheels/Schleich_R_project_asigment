@@ -1,37 +1,37 @@
-*
 ---
-title: "Exam3_Schleich_new"
+title: "Exam2_Schleich_Fabian"
 author: "Fabian Schleich"
-date: "2024-11-28"
+date: "2024-12-01"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
 ## R Markdown
 
 #requirments of the exam are: 
 Data: 
 done-read in data from line 26 on in 
 done-*NOTE:* One of the files contains random ',' as a numeric separator, which will force the entire column to be read as a character class. You will need to replace the ',' separator with '.' to properly convert the column to numeric.
+done-where is the time varaible??
+done -dont filter tourq data this way, some peaks have same value and are filtered out atm --> add super tiny bit of unique random data before filtering??? test on CTM15.txt, we accept that one out of 144 peaks are not captured
+done -calculate torque minima and maxima and plot them, use splus2R package(peaks() function) to identify them
 
 -Read in and asign usefull names (FIle: A_BID_CTM01; "folder name" "_" "filename before the .txt"); take "before"; or "after" from file name, Info in file: speed: x
 
--where is the time varaible??
--calculate torque minima and maxima and plot them, use splus2R package(peaks() function) to identify them
-
 Plotting:
+done-x axis: time(min) with a bit of padding/starting before 0, then 2500, 5000, 7500 (plotting everything up to 10.000)
+done-plot speed, angle, torque as "names" underneath plot
+done -y axis: value -130 to 200, with xaxis lines at 100, 0 and -100
+
+
 -Plot angle, speed and torque for 16 data sets in 3 diffrent colors value vs time (min) --> facit wrap or for loop?
 -Plot header (file name but not the -txt), exercise: before and after (added to folder) and speed: x
--y axis: value -130 to 200, with xaxis lines at 100, 0 and -100
--x axis: time(min) with a bit of padding/starting before 0, then 2500, 5000, 7500 (plotting everything up to 10.000)
--plot speed, angle, torque as "names" underneath plot
 
 Finish:
 -knit them as pdf together
--Name it "Exam2_Schleich_Fabian"
+-Name pdf "Exam2_Schleich_Fabian"
 
 
 
@@ -41,14 +41,16 @@ Finish:
 #install.packages("splus2R")
 library(tidyverse)
 library(splus2R)
+library(tibble)
+
 ```
 
 
 
 #load data and info into seperate onjectes
-```{r}
+```{r, data}
 #load data into object to then start tiding it up
-dirty_file <- ("C:/Users/fabisc/OneDrive - Karolinska Institutet/Documents/Courses/Intermediate R/Schleich_R_project_asigment/Day8and9_Exam2/data/Before_A_BID/CTM01.txt")
+dirty_file <- ("C:/Users/fabisc/OneDrive - Karolinska Institutet/Documents/Courses/Intermediate R/Schleich_R_project_asigment/Day8and9_Exam2/data/A_R2/CTM02.txt")
 
 #makes it string readable
 dirty_txt_file <- read_lines(dirty_file)
@@ -59,21 +61,91 @@ temp_file <- tempfile(fileext = ".txt")
 write_lines(slightly_cleaner_txt_file, temp_file)
 
 #col names to rename the columns
-cool_names <- c("angle", "speed", "torque")
+cool_names <- c("Torque", "Speed", "Angle" )
 #read only the data portion 
 dirty_data <- read_tsv(temp_file, skip = 26, col_names = cool_names, col_types = cols(angle = col_double(), speed = col_double(), torque = col_double()))
 
 #when not replacing the , by . this was used to find the error
 #problems(dirty_data) #one datapoint uses . instead of , 
 
+#count number of events
+time <- (1:nrow(dirty_data))
 
 #read only the information portion
-dirty_info <- read_tsv(dirty_file , n_max = 1)
+dirty_info <- read_tsv(dirty_file, n_max = 1, col_names = c("text", "Speed"), skip =1) ##supposed to use speed column as part of title
+
+
+#?read_tsv
+#add the events/time to the dirty data, making it a bit less dirty
+slightly_less_dirty_data <- cbind(time, dirty_data)
+#slightly_less_dirty_data <- cbind(slightly_less_dirty_data, dirty_info)
+
+#make it long data
+long_slightly_less_dirty_data <- slightly_less_dirty_data %>%
+  pivot_longer(cols = c(Angle, Speed, Torque), 
+               names_to = "variable", 
+               values_to = "value")
 ```
+
+#local min and maxima
+```{r, splus2R package(peaks() function)}
+#?peaks()
+x <- slightly_less_dirty_data
+
+#find positive maxima and make them a vector
+z <- slightly_less_dirty_data %>%
+  peaks(span=200, strict=F, endbehavior = 1) %>%
+  pull(Torque)
+
+#use logical vector, make num values out of them, then filter for positive values and round them
+zz <- slightly_less_dirty_data%>%
+  filter(z == TRUE)%>%
+  filter(Torque > 30)%>%
+  distinct(Torque, .keep_all = T)%>%
+  mutate(Torque = round(Torque, 2))
+
+
+#?filter
+#same but for negative inflextion points
+y <- slightly_less_dirty_data %>%
+  mutate(Torque = -Torque) %>%
+  peaks(span=460, strict=F, endbehavior = 1) %>%
+  pull(Torque)
+
+
+#do the same but for neg values
+yy<-slightly_less_dirty_data%>%
+  filter(y == TRUE)%>%
+  filter(Torque < -60)%>%
+  distinct(Torque, .keep_all = T)%>%
+  mutate(Torque = round(Torque, 2))
+
+
+```
+
+
 #data is read in time to start plotting
-```{r}
-ggplot(data = dirty_data)
+```{r, plot}
+#raw plot using geom path 
+ggplot(data = long_slightly_less_dirty_data, aes(time, value, color = variable))+
+  geom_path()+  #geom line looked diffrent then reference
+  geom_point(data = zz, aes(x = time, y = Torque), inherit.aes = FALSE)+
+  geom_point(data = yy, aes(x = time, y = Torque), inherit.aes = FALSE)+
+  geom_text(data = zz, aes(x = time, y = Torque, label = Torque), nudge_y  = 15, size = 3, inherit.aes = FALSE)+
+   geom_text(data = yy, aes(x = time, y = Torque, label = Torque), nudge_y  = -15, size = 3, inherit.aes = FALSE)+
+  labs(
+    title ="File: A_BID_CTM01", 
+    subtitle = "Exercise: Before; Speed: 30",
+    x = "time(sec)",
+    y = "Value") +
+  theme_bw()+
+  theme(
+    legend.title = element_blank(), 
+    panel.grid.major = element_line(),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom",
+  )
 
-
+#?geom_text
 ```
 
